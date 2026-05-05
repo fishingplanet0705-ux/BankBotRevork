@@ -1,12 +1,14 @@
 import aiosqlite
 
-DB_NAME = "bank.db"
+DB = "bank.db"
 
 async def init_db():
-    async with aiosqlite.connect(DB_NAME) as db:
+    async with aiosqlite.connect(DB) as db:
+
         await db.execute("""
         CREATE TABLE IF NOT EXISTS users(
-            username TEXT PRIMARY KEY,
+            user_id INTEGER,
+            username TEXT,
             rating REAL DEFAULT 5.0,
             credits_taken INTEGER DEFAULT 0,
             total_credit REAL DEFAULT 0
@@ -15,13 +17,15 @@ async def init_db():
 
         await db.execute("""
         CREATE TABLE IF NOT EXISTS admins(
-            username TEXT PRIMARY KEY
+            user_id INTEGER,
+            username TEXT
         )
         """)
 
         await db.execute("""
         CREATE TABLE IF NOT EXISTS loans(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
             username TEXT,
             amount REAL,
             days INTEGER,
@@ -31,8 +35,15 @@ async def init_db():
         """)
 
         await db.execute("""
+        CREATE TABLE IF NOT EXISTS debts(
+            user_id INTEGER,
+            username TEXT,
+            amount REAL
+        )
+        """)
+
+        await db.execute("""
         CREATE TABLE IF NOT EXISTS logs(
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
             action TEXT,
             admin TEXT,
             target TEXT
