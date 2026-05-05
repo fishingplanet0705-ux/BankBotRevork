@@ -1,4 +1,4 @@
-from .db import DB_NAME
+from .db import DB
 import aiosqlite
 
 def calc_percent(rating):
@@ -11,24 +11,23 @@ def calc_percent(rating):
     else:
         return 5
 
-async def create_loan(username, amount, days, percent):
-    async with aiosqlite.connect(DB_NAME) as db:
-        await db.execute(
-            "INSERT INTO loans(username, amount, days, percent, status) VALUES(?,?,?,?,?)",
-            (username, amount, days, percent, "pending")
-        )
+async def create_loan(user_id, username, amount, days, percent):
+    async with aiosqlite.connect(DB) as db:
+        await db.execute("""
+        INSERT INTO loans(user_id, username, amount, days, percent, status)
+        VALUES(?,?,?,?,?,?)
+        """, (user_id, username, amount, days, percent, "pending"))
         await db.commit()
 
-async def get_loans(status="pending"):
-    async with aiosqlite.connect(DB_NAME) as db:
+async def get_pending_loans():
+    async with aiosqlite.connect(DB) as db:
         async with db.execute(
-            "SELECT * FROM loans WHERE status=?",
-            (status,)
+            "SELECT * FROM loans WHERE status='pending'"
         ) as cur:
             return await cur.fetchall()
 
 async def approve_loan(loan_id):
-    async with aiosqlite.connect(DB_NAME) as db:
+    async with aiosqlite.connect(DB) as db:
         await db.execute(
             "UPDATE loans SET status='approved' WHERE id=?",
             (loan_id,)
@@ -36,7 +35,7 @@ async def approve_loan(loan_id):
         await db.commit()
 
 async def deny_loan(loan_id):
-    async with aiosqlite.connect(DB_NAME) as db:
+    async with aiosqlite.connect(DB) as db:
         await db.execute(
             "UPDATE loans SET status='denied' WHERE id=?",
             (loan_id,)
